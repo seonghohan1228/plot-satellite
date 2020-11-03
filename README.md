@@ -28,3 +28,9 @@ conda activate ./venv
 conda install -c conda-forge proj4
 conda install -c conda-forge basemap
 ```
+For IGRF, type
+```
+pip install IGRF
+```
+
+

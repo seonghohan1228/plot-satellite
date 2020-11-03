@@ -180,7 +180,7 @@ block1_values
 
     Column 3: HK (Analog power ON/OFF)
 
-    Column 4: DT (Subunit ID)
+*    Column 4: DT (Subunit ID)
 
     Column 5: PC1 (Packet count (Inc. (begin with 0)))
 
@@ -196,7 +196,7 @@ block1_values
 
     Column 11: SUB_SEC (Subsecond, unit 1/128 sec)
 
-*    Column 12: DCB_ID (Subunit ID)
+    Column 12: DCB_ID (Subunit ID)
 
 *    Column 13-76: DT0_CH00 ~ DT0_CH63 (Detector 0, channel 0 ~ 63)
 
