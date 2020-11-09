@@ -1,6 +1,25 @@
 import h5py
 import numpy as np
 
+DATASET1 = 'block1_values'
+DATASET2 = 'block2_values'
+
+# Read HDF5 data and returns all required datasets.
+def read_hdf(filename):
+    # group: HEPD_DIV or MEPD_SCI
+    group = filename[0:8]
+    filepath = 'data/' + filename
+
+    # Reads hdf file and closes as it leaves with statement.
+    with h5py.File(filepath, 'r') as hdf:
+        path1 = '/' + group + '/' + DATASET1
+        path2 = '/' + group + '/' + DATASET2
+
+        dataset1 = np.array(hdf[path1])
+        dataset2 = np.array(hdf[path2])
+
+    return dataset1, dataset2
+
 
 # Read TIME data
 def read_TIME(filename):

@@ -16,75 +16,82 @@ new_cmap = matplotlib.colors.ListedColormap(newcolors)
 
 # COMPLETE
 # Plot TIME vs. PC1
-def plot_PC1(filename_HEPD, filename_MEPD):
-    # Read TIME data
-    TIME_HEPD = read_TIME(filename_HEPD)
-    TIME_MEPD = read_TIME(filename_MEPD)
-    # Read PC1 data
-    PC1_HEPD = read_PC1(filename_HEPD)
-    PC1_MEPD = read_PC1(filename_MEPD)
-    # Read DT (Subunit ID) data
-    DT = read_DT(filename_MEPD)
-    
+def plot_PC1(PC1_HEPD, PC1_MEPD, TIME_HEPD, TIME_MEPD, DT):
     # Divide PC1 data into MEPD-A and MEPD-B
     PC1_MEPD_A, PC1_MEPD_B = sliceAB(PC1_MEPD, DT, 3)
     TIME_MEPD_A, TIME_MEPD_B = sliceAB(TIME_MEPD, DT, 3)
 
+    # Plot PC1 data.
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
 
+    # Plot HEPD PC1 data.
     ax1.plot(PC1_HEPD, TIME_HEPD - TIME_HEPD[0], '-k')
+
+    # Plot MEPD-A and MEPD-B PC1 data.
+    ax2.plot(PC1_MEPD_A, TIME_MEPD_A - TIME_MEPD_A[0], '-k', label='MEPD-A')
+    ax2.plot(PC1_MEPD_B, TIME_MEPD_B - TIME_MEPD_B[0], '-r', label='MEPD-B')
+
     ax1.set_title('HEPD: Time vs PC1')
     ax1.set_xlabel('PC1')
     ax1.set_ylabel('Time (sec)')
-    
-    ax2.plot(PC1_MEPD_A, TIME_MEPD_A - TIME_MEPD_A[0], '-k', label='MEPD-A')
-    ax2.plot(PC1_MEPD_B, TIME_MEPD_B - TIME_MEPD_B[0], '-r', label='MEPD-B')
+
     ax2.set_title('MEPD: Time vs PC1')
     ax2.set_xlabel('PC1')
+
     plt.legend()
-    
+
     plt.savefig('./plots/PC1.png')
-    #plt.show()
+    plt.show()
     plt.close('all')
 
 
 # INCOMPLETE: Geomagnetic lattitude plot
 # Plot satellite position onto map
-def plot_POS(filename):
-    # Read TIME data
-    TIME = read_TIME(filename)
-    
-    # Read POS data
-    POS = read_POS(filename)
+def plot_POS(POS, TIME, POLE):
     LAT = POS[:, 0]
     LON = POS[:, 1]
-    ALT = POS[:, 2]
+    #ALT = POS[:, 2]
     
-    m = Basemap(projection='ortho', lat_0=-90, lon_0=0)
-    m.drawcoastlines()
-    m.drawmeridians(np.arange(0,360,45))
-    m.drawparallels(np.arange(-90,90,30))
+    start_time = datetime.fromtimestamp(TIME[0]) # Converts UNIX datetime to UTC datetime
+    end_time = datetime.fromtimestamp(TIME[-1])
+
+    # Draw maps.
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 7))
+
+    # Mercador projection.
+    m1 = Basemap(projection='merc',llcrnrlat=-85,urcrnrlat=85, llcrnrlon=-180,urcrnrlon=180, ax=ax1)
+    m1.drawcoastlines()
+    m1.drawmeridians(np.arange(0,360,45), labels=[False, False, False, True])
+    m1.drawparallels(np.arange(-90,90,30), labels=[False, True, False, False])
+
+    # Orthographic projection.
+    m2 = Basemap(projection='ortho', lat_0=POLE, lon_0=0, ax=ax2)
+    m2.drawcoastlines()
+    m2.drawmeridians(np.arange(0,360,45), labels=[False, False, False, True])
+    m2.drawparallels(np.arange(-90,90,30)) # Cannot label parallels on Orthographic basemap.
     
-    X, Y = m(LON, LAT)
-    m.plot(X[:-1], Y[:-1], '.r')
-    m.plot(X[-1], Y[-1], 'ob')
+    # Plot satellite position.
+    X, Y = m1(LON, LAT)
+    s1 = m1.scatter(X, Y, marker='.', c=TIME, cmap=plt.cm.jet)
+    ax1.annotate(start_time.strftime('%H:%M'), (X[0], Y[0]))
+    ax1.annotate(end_time.strftime('%H:%M'), (X[-1], Y[-1]))
+
+    X, Y = m2(LON, LAT)
+    s2 = m2.scatter(X, Y, marker='.', c=TIME, cmap=plt.cm.jet)
+    ax2.annotate(start_time.strftime('%H:%M'), (X[0], Y[0]))
+    ax2.annotate(end_time.strftime('%H:%M'), (X[-1], Y[-1]))
     
+    cbar = fig.colorbar(s1, ax=ax2, label='Time (UNIX)')
+
     # Plot terminator
-    time_utc = datetime.fromtimestamp(TIME[0]) # Converts UNIX datetime to UTC datetime
-    m.nightshade(time_utc)
-    """
-    # Calculate magnetic pole
-    year = int(filename[9:13])
-    Nlat, Nlon, Slat, Slon = pole(year, ALT[0]) # ALT unit?
+    m1.nightshade(start_time)
+    m2.nightshade(end_time)
 
-    # Calculate geomagnetic latitide using magnetic pole
-    #geomag = mlat(N_mag_pole, S_mag_pole)
-    """
-
-    plt.title('Orbit (Orthographic projection)')
+    ax1.set_title('Orbit (Mercador projection)')
+    ax2.set_title('Orbit (Orthographic projection)')
 
     plt.savefig('./plots/Position.png')
-    #plt.show()
+    plt.show()
     plt.close('all')
     
 
